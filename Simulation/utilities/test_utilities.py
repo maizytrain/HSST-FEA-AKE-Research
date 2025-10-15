@@ -1,5 +1,5 @@
 from .vector3 import Vector3
-from .triangle import Triangle
+from .triangle import FEATriangle
 
 
 
@@ -81,7 +81,7 @@ def test_triangle_creation():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     calc = [tri.p4, tri.p5, tri.p6]
     ans = [Vector3(0.65,.6,.85), Vector3(0.45,0.6,1), Vector3(.4,.3,.95)]
@@ -99,7 +99,7 @@ def test_dx_dy_shapes():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     dxs, dys = tri.shape_functions_dx_dy(0,0)
 
@@ -111,7 +111,7 @@ def test_B_membrane():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     B_m = tri.get_membrane_B(0,0)
 
@@ -122,7 +122,7 @@ def test_B_bending():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     B_b = tri.get_bending_B(0,0)
 
@@ -133,7 +133,7 @@ def test_B_shear():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     B_s = tri.get_shear_B(0,0)
 
@@ -144,7 +144,7 @@ def test_D_membrane():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     D_m = tri.get_membrane_D(0,0)
 
@@ -155,7 +155,7 @@ def test_D_bending():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     D_b = tri.get_bending_D(0,0)
 
@@ -166,7 +166,7 @@ def test_D_shear():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     D_s = tri.get_shear_D(0,0)
 
@@ -177,7 +177,7 @@ def test_get_Ke():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     Ke = tri.get_Ke()
 
@@ -188,7 +188,7 @@ def test_get_global_Ke():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     Keglobal = tri.get_Ke_global()
     # print(Keglobal)
@@ -201,7 +201,7 @@ def test_get_mass_matrix_M():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     M= tri.get_mass_matrix()
     # print(M)
@@ -214,7 +214,7 @@ def test_get_global_Me():
     p2 = Vector3(.7, .9, .9)
     p3 = Vector3(.2, .3, 1.1)
 
-    tri = Triangle(p1, p2, p3)
+    tri = FEATriangle(p1, p2, p3)
 
     Meglobal = tri.get_Me_global()
     # print(Keglobal)

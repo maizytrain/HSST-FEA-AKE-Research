@@ -1,12 +1,22 @@
 from .vector3 import Vector3, create_Vector3_from_numpy_array
 import numpy as np
-
-
-
+from .node import Node
 
 
 
 class Triangle:
+    def __init__(self, p1, p2, p3):
+        self.p1 = p1
+        self.p2 = p2
+        self.p3 = p3
+
+    def __str__(self):
+        return f"[{self.p1}], [{self.p2}], [{self.p3}]"
+    def __repr__(self):
+        return f"[{self.p1}], [{self.p2}], [{self.p3}]"
+
+
+class FEATriangle:
     def __init__(self, p1, p2, p3, E=29000, v=.3, h=.25, rho=.28, shear_correction = 5):
         self.p1 = p1
         self.p2 = p2
@@ -22,6 +32,11 @@ class Triangle:
         self.set_basis_vectors()
         self.set_rotation_matrix()
         self.translate_points_to_local()
+
+    def __str__(self):
+        return f"[{self.p1}], [{self.p2}], [{self.p3}]"
+    def __repr__(self):
+        return f"[{self.p1}], [{self.p2}], [{self.p3}]"
 
 
     def set_basis_vectors(self):
