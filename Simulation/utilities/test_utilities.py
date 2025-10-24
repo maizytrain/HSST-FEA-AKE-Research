@@ -1,5 +1,7 @@
 from .vector3 import Vector3
 from .triangle import FEATriangle
+from .node import Node
+from .simulation import Simulation
 
 
 
@@ -77,9 +79,9 @@ def test_vector3_unit_vector():
 
 
 def test_triangle_creation():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -95,9 +97,9 @@ def test_triangle_creation():
 
 
 def test_dx_dy_shapes():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -107,9 +109,9 @@ def test_dx_dy_shapes():
     assert len(dys) == 6
 
 def test_B_membrane():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -118,9 +120,9 @@ def test_B_membrane():
     assert B_m.shape == (3, 30)
 
 def test_B_bending():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -129,9 +131,9 @@ def test_B_bending():
     assert B_b.shape == (3, 30)
 
 def test_B_shear():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -140,9 +142,9 @@ def test_B_shear():
     assert B_s.shape == (2, 30)
 
 def test_D_membrane():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -151,9 +153,9 @@ def test_D_membrane():
     assert D_m.shape == (3,3)
 
 def test_D_bending():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -162,9 +164,9 @@ def test_D_bending():
     assert D_b.shape == (3,3)
 
 def test_D_shear():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -173,9 +175,9 @@ def test_D_shear():
     assert D_s.shape == (2,2)
 
 def test_get_Ke():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -184,9 +186,9 @@ def test_get_Ke():
     assert Ke.shape == (30,30)
 
 def test_get_global_Ke():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -197,9 +199,9 @@ def test_get_global_Ke():
     # assert False
 
 def test_get_mass_matrix_M():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -210,9 +212,9 @@ def test_get_mass_matrix_M():
     # assert False
 
 def test_get_global_Me():
-    p1 = Vector3(.6, .3, .8)
-    p2 = Vector3(.7, .9, .9)
-    p3 = Vector3(.2, .3, 1.1)
+    p1 = Node(Vector3(.6, .3, .8))
+    p2 = Node(Vector3(.7, .9, .9))
+    p3 = Node(Vector3(.2, .3, 1.1))
 
     tri = FEATriangle(p1, p2, p3)
 
@@ -221,3 +223,87 @@ def test_get_global_Me():
 
     assert Meglobal.shape == (36,36)
     # assert False
+
+
+
+
+
+
+
+
+
+
+
+# Simulation Tests
+sim = Simulation(2, 10)
+
+def test_simulation_creation():
+    assert isinstance(sim, Simulation)
+    assert sim.cylinderDiameter == 2
+    assert sim.cylinderLength == 10
+    assert len(sim.triangles) != 0
+    assert len(sim.featriangles) != 0
+    assert len(sim.nodes) != 0
+
+
+def test_simulation_nodes():
+    for tri in sim.featriangles:
+        assert tri.n1 != -1
+        assert tri.n2 != -1
+        assert tri.n3 != -1
+        assert tri.n4 != -1
+        assert tri.n5 != -1
+        assert tri.n6 != -1
+
+    assert len(sim.nodes) == 1610
+
+def test_assure_no_duplicate_nodes():
+    for i in range(len(sim.nodes)):
+        n1 = sim.nodes[i]
+        for j in range(len(sim.nodes)):
+            if i != j:
+                n2 = sim.nodes[j]
+                assert n1.position != n2.position
+                assert n1.index != n2.index
+
+
+def test_simulation_structural_stiffness():
+    Ks = sim.get_structural_stiffness()
+
+    assert Ks.shape == (1610*6,1610*6)
+
+def test_simulation_mass_matrix():
+    Ms = sim.get_mass_matrix()
+
+    assert Ms.shape == (1610*6,1610*6)
+
+def test_simulation_fluid_stiffness():
+    Kf = sim.get_fluid_stiffness()
+
+    assert Kf.shape == (1610*6,1610*6)
+
+
+def test_prestress_forces():
+    F = sim.calculate_prestress_forces()
+
+    all_zeroes = True
+    for i in range(len(F)):
+        if F[i] != 0:
+            all_zeroes = False
+            break
+    
+    assert not all_zeroes
+    assert len(F) == 1610 * 6
+
+
+def test_prestress_deflections():
+    d = sim.calculate_prestress_deflections()
+
+    all_zeroes = True
+    for i in range(len(d)):
+        if d[i] != 0:
+            all_zeroes = False
+            break
+    
+    assert not all_zeroes
+    assert len(d) == 1610 * 6
