@@ -125,3 +125,12 @@ Re = sim.featriangles[0].Re
 print("Re @ Re.T:", Re @ Re.T)
 Te = sim.featriangles[0].get_Te()
 print("Te^T @ Te symmetry error:", np.max(np.abs(Te.T @ Te - np.eye(Te.shape[1]))))
+print()
+print(sim.featriangles[0].get_normal())
+# parr = Te.T @ Te
+# strs = []
+# for i in range(parr.shape[0]):
+#     strs.append("")
+#     for j in range(parr.shape[1]):
+#         strs[i] += str(parr[i,j]) + ", "
+#     print(strs[i])

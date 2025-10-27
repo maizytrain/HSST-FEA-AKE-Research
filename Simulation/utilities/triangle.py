@@ -250,14 +250,19 @@ class FEATriangle:
 
     def get_Te(self):
         Re = self.Re
+        ReT = np.transpose(Re)
         Te = np.zeros((30, 36))
         for i in range(6):
-            for j in range(3):  # translational DOFs
+            Ti = np.zeros((5,6))
+            for j in range(3):
                 for k in range(3):
-                    Te[5*i + j, 6*i + k] = Re[k,j]
-            for j in range(2):  # rotational DOFs
-                for k in range(3):
-                    Te[5*i + 3 + j, 6*i + 3 + k] = Re[k,j]
+                    Ti[j,k] = ReT[j,k]
+            for j in range(3,5):
+                for k in range(3,6):
+                    Ti[j,k] = ReT[j-3,k-3]
+            for j in range(5):
+                for k in range(6):
+                    Te[5*i + j, 6*i + k] = Ti[j,k]
         return Te
 
     def get_Ke_global(self):
