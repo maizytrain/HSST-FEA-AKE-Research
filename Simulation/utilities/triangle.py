@@ -17,7 +17,7 @@ class Triangle:
 
 
 class FEATriangle:
-    def __init__(self, node1:Node, node2:Node, node3:Node, E=29000, v=.3, h=.25, rho=.28, shear_correction = 5):
+    def __init__(self, node1:Node, node2:Node, node3:Node, E=29000000, v=.3, h=.25, rho=.28, shear_correction = 5):
         self.n1 = node1.index
         self.n2 = node2.index
         self.n3 = node3.index

@@ -21,7 +21,7 @@ fig = go.Figure()
 sim = Simulation(2*12, 8*12)
 sim.get_tris()
 sim.draw(fig, .3)
-sim.draw_prestress_deflected(fig, .7, .00000000001)
+sim.draw_prestress_deflected(fig, .7, .000001)
 sim.draw_fixities(fig)
 
 fig.update_layout(scene=dict(aspectmode='data'))

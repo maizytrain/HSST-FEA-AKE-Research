@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 from .vector3 import Vector3
 from .triangle import Triangle
@@ -59,6 +59,7 @@ class Simulation:
         self.now_volume = self.original_volume
         self.original_pressure = initialPressure
         self.now_pressure = self.original_pressure
+        self.debug_lines = []
 
 
     def get_tris(self):
@@ -499,4 +500,25 @@ class Simulation:
                 color='red',
                 opacity=0.8
             )
+        ))
+
+
+    def debug_draw_line(self, start:Vector3, end:Vector3):
+        self.debug_lines.append([start, end])
+
+    def draw_debug_lines(self, fig, color="black"):
+        xs = []
+        ys = []
+        zs = []
+        for i in range(len(self.debug_lines)):
+            xs.extend([self.debug_lines[i][0].x, self.debug_lines[i][1].x, None])
+            ys.extend([self.debug_lines[i][0].y, self.debug_lines[i][1].y, None])
+            zs.extend([self.debug_lines[i][0].z, self.debug_lines[i][1].z, None])
+
+        fig.add_trace(go.Scatter3d(
+            x=xs,
+            y=ys,
+            z=zs,
+            mode='lines',
+            line=dict(color=color)
         ))
