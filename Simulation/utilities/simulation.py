@@ -271,7 +271,7 @@ class Simulation:
         return Ms
     
     def get_center(self):
-        return Vector3((self.cylinderLength + self.cylinderDiameter) * .5, self.cylinderDiameter * .5, self.cylinderDiameter * .5)
+        return Vector3(self.cylinderLength * .5, self.cylinderDiameter * .5, self.cylinderDiameter * .5)
     
 
     def get_f(self):

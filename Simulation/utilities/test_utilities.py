@@ -2,7 +2,7 @@ from .vector3 import Vector3
 from .triangle import FEATriangle
 from .node import Node
 from .simulation import Simulation
-
+import numpy as np
 
 
 
@@ -309,3 +309,11 @@ def test_prestress_deflections():
     assert len(d) == 1610 * 6
 
 
+def test_conditional():
+    Ks = sim.get_structural_stiffness()
+    print("K conditional number:", np.linalg.cond(Ks))
+    F = np.zeros(Ks.shape[0])
+    F[20] = 100
+    d = np.linalg.solve(Ks, F)
+    print("Max Deflection:", np.max(np.abs(d)))
+    assert False

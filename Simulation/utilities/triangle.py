@@ -71,7 +71,7 @@ class FEATriangle:
         n = v1.cross(v2)
         self.n = n.unit_vector()
         self.t1 = v1.unit_vector()
-        self.t2 = n.cross(self.t1)
+        self.t2 = n.cross(self.t1).unit_vector()
 
     def get_normal(self):
         v1 = self.p2 - self.p1
@@ -220,11 +220,11 @@ class FEATriangle:
         D[0,0] = 1
         D[1,1] = 1
 
-        D = D * (self.E * self.h / (2 * (1 - self.v)) * self.shear_correction)
+        D = D * (self.E * self.h / (2 * (1 + self.v)) * self.shear_correction)
         return D
     
 
-    def get_Ke(self):
+    def get_Ke(self, detJ_tolerance = .01):
         zetas = [1/6, 2/3, 1/6]
         etas = [1/6, 1/6, 2/3]
         Ke = np.zeros((30,30))
@@ -236,7 +236,7 @@ class FEATriangle:
             B_s = self.get_shear_B(zetas[i], etas[i])
             D_s = self.get_shear_D(zetas[i], etas[i])
             detJ = np.linalg.det(self.get_jacobian(zetas[i], etas[i]))
-            if detJ <= 0:
+            if detJ < detJ_tolerance:
                 raise Exception("Dejenerate Plate" + '\n' + "DetJ:" + str(detJ) + '\n' +
                                                             "POINTS: " + str(self.p1) + ", " + str(self.p2) + ", " + 
                                                                         str(self.p3) + ", " + str(self.p4) + ", " + 
@@ -250,17 +250,14 @@ class FEATriangle:
 
     def get_Te(self):
         Re = self.Re
-        Te = np.zeros((30,36))
+        Te = np.zeros((30, 36))
         for i in range(6):
-            Ti = np.zeros((5,6))
-            for j in range(3):
+            for j in range(3):  # translational DOFs
                 for k in range(3):
-                    Ti[j,k] = Re[k,j] #Something is wrong here I think? It may be time to implement more rigorous tests.
-                    if not j==2:
-                        Ti[j+3,k+3] = Re[k,j]
-            for j in range(5):
-                for k in range(6):
-                    Te[j + 5 * i, k + 6 * i] = Ti[j, k]
+                    Te[5*i + j, 6*i + k] = Re[k,j]
+            for j in range(2):  # rotational DOFs
+                for k in range(3):
+                    Te[5*i + 3 + j, 6*i + 3 + k] = Re[k,j]
         return Te
 
     def get_Ke_global(self):
@@ -310,7 +307,7 @@ class FEATriangle:
         c = (self.p1 + self.p2 + self.p3) * (1/3)
         d = center - c
         val = n.dot(d)
-        if val < 0:
+        if val > 0:
             n = n * -1
         return n
     
