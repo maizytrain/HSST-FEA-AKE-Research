@@ -55,11 +55,21 @@ class Simulation:
         self.featriangles = self.triangles_to_featriangles()
         self.get_nodes()
         self.define_restraints()
+        # self.debug_fixities()
         self.original_volume = 4/3 * np.pi * (cylinderDiameter * .5)**3 + np.pi * (cylinderDiameter * .5)**2 * cylinderLength
         self.now_volume = self.original_volume
         self.original_pressure = initialPressure
         self.now_pressure = self.original_pressure
         self.debug_lines = []
+
+
+
+    def debug_fixities(self):
+        print("=== Checking node fixities ===")
+        for node in self.nodes:
+            fixed_status = ''.join(['T' if f else 'F' for f in node.fixed])
+            if all(node.fixed):
+                print(f"Node {node.index}: fixed DOFs = {fixed_status}")
 
 
     def get_tris(self):
@@ -353,9 +363,9 @@ class Simulation:
         Ks = self.get_structural_stiffness()
         Ks = self.remove_fixities(Ks)
         d = np.linalg.solve(Ks, np.transpose(F))
-        print("Before:", len(d))
+        # print("Before:", len(d))
         d = self.replace_fixities(d)
-        print("After:", len(d))
+        # print("After:", len(d))
         return d
     
 
@@ -426,6 +436,26 @@ class Simulation:
         d = self.calculate_prestress_deflections()
         # print(d)
         print("Max:", max(d), "Min:", min(d))
+        dxs = []
+        dys = []
+        dzs = []
+        rx = []
+        ry = []
+        rz = []
+        for i in range(len(self.nodes)):
+            dxs.append(d[6 * i + 0])
+            dys.append(d[6 * i + 1])
+            dzs.append(d[6 * i + 2])
+            rx.append(d[6*i+3])
+            ry.append(d[6*i+4])
+            rz.append(d[6*i+5])
+        print("Max x:", max(dxs), "Min x:", min(dxs))
+        print("Max y:", max(dys), "Min y:", min(dys))
+        print("Max z:", max(dzs), "Min z:", min(dzs))
+        print("Max rx:", max(rx), "Min rx:", min(rx))
+        print("Max ry:", max(ry), "Min ry:", min(ry))
+        print("Max rz:", max(rz), "Min rz:", min(rz))
+        
 
         # F = self.calculate_prestress_forces()
         # F = self.remove_fixities(F)

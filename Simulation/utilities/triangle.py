@@ -17,7 +17,7 @@ class Triangle:
 
 
 class FEATriangle:
-    def __init__(self, node1:Node, node2:Node, node3:Node, E=29000000, v=.3, h=.25, rho=.28, shear_correction = 5):
+    def __init__(self, node1:Node, node2:Node, node3:Node, E=29000000, v=.3, h=.25, rho=.28, shear_correction = 5/6):
         self.n1 = node1.index
         self.n2 = node2.index
         self.n3 = node3.index
@@ -224,7 +224,7 @@ class FEATriangle:
         return D
     
 
-    def get_Ke(self, detJ_tolerance = .01):
+    def get_Ke(self, alpha=1e-3, detJ_tolerance = .01):
         zetas = [1/6, 2/3, 1/6]
         etas = [1/6, 1/6, 2/3]
         Ke = np.zeros((30,30))
@@ -246,6 +246,7 @@ class FEATriangle:
             Kb = np.transpose(B_b) @ D_b @ B_b
             Ks = np.transpose(B_s) @ D_s @ B_s
             Ke += (Km + Kb + Ks) * detJ / 6
+            # Kb_drill = np.zeros((30,30))
         return Ke
 
     def get_Te(self):
