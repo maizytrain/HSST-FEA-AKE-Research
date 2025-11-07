@@ -207,6 +207,8 @@ class Simulation:
 
 
     def define_restraints(self, tolerance = .001):
+        self.check_for_duplicate_nodes()
+        self.check_for_single_nodes()
         xs = np.linspace(0 + self.saddle_inset, self.cylinderLength - self.saddle_inset, self.saddles)
         for x in xs:
             closest_x = -100000.0
@@ -340,7 +342,7 @@ class Simulation:
             for i in range(6):
                 if node.fixed[i]:
                     fixes.append(baseval + i)
-        fixes.sort(reverse=True)
+        fixes.sort()
         # print("Fixities Replaced:", len(fixes))
         zeros = np.zeros(new_mat.shape[0])
         if new_mat.ndim == 1:
@@ -382,6 +384,26 @@ class Simulation:
                         for j in range(6):
                             Ksigma[n1 * 6 + i, n2 * 6 + j] += ksigma[i, j]
         return Ksigma
+    
+
+
+
+    def check_for_duplicate_nodes(self):
+        for i in range(len(self.nodes)):
+            for j in range(i+1, len(self.nodes)):
+                if self.nodes[i].position == self.nodes[j].position:
+                    raise Exception("DUPLICATE NODES FOUND")
+                
+
+    def check_for_single_nodes(self):
+        use_counts = np.zeros(len(self.nodes))
+        for tri in self.featriangles:
+            idxs = tri.get_node_indexes()
+            for i in idxs:
+                use_counts[i] += 1
+        for count in use_counts:
+            if count <= 1:
+                raise Exception("SINGLE NODES FOUND")
     
     
 

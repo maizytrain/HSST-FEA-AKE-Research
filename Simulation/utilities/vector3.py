@@ -18,7 +18,7 @@ class Vector3:
     
     def __eq__(self, other):
         if isinstance(other, Vector3):
-            return (self.x == other.x and self.y == other.y and self.z == other.z)
+            return (abs(self.x - other.x) < 1e-8 and abs(self.y - other.y) < 1e-8 and abs(self.z - other.z) < 1e-8)
         else:
             raise TypeError("Unsupported operand type for ==")
 

@@ -212,7 +212,7 @@ class FEATriangle:
         D[1,1] = 1
         D[2,2] = (1 - self.v) * .5
 
-        D = D * (self.E * self.h**3 / (12 * (1 - self.v**2)))
+        D = D * (self.E * self.h**3 / (12 * (1 - self.v**2))) #* 10
         return D
     
     def get_shear_D(self, zeta, eta):
@@ -267,36 +267,72 @@ class FEATriangle:
         return Te
 
     def get_Ke_global(self):
-        Te = self.get_Te()
-        Ke = self.get_Ke()
-        Keglobal = np.transpose(Te) @ Ke @ Te
+        # Local-to-global transform
+        Te = self.get_Te()            # 30 x 36
+        Ke = self.get_Ke()           # 30 x 30 (local element stiffness in element-local coords)
+
+        # Element stiffness in element-global coords (36 x 36)
+        Keglobal = Te.T @ Ke @ Te
+
+        # ------------------ drilling stabilization (element-local) ------------------
+        # We must add a small diagonal penalty to each node's drilling DOF inside this element
+        # (element-local DOF index = node_local*6 + 5, for node_local = 0..5).
+        #
+        # Choose a penalty scaled to the element membrane stiffness so units/scale are consistent.
+        # alpha is a small fraction; 1e-3 is a reasonable starting point (reduce if needed).
+        alpha = 1e-3
+
+        # Estimate a representative membrane stiffness magnitude at the element center
+        # (use zeta=eta=1/3 integration point for a simple estimate)
+        zeta = 1.0/3.0
+        eta = 1.0/3.0
+        Bm_center = self.get_membrane_B(zeta, eta)       # 3 x 30
+        Dm_center = self.get_membrane_D(zeta, eta)       # 3 x 3
+        Km_est = Bm_center.T @ Dm_center @ Bm_center     # 30 x 30 (but dominated by membrane part)
+        # derive a scalar scale (use trace averaged by size to avoid huge values)
+        km_scale = np.trace(Km_est) / max(1.0, Km_est.shape[0])
+        k_drill = alpha * abs(km_scale)
+
+        # Apply drilling penalty to each node's drilling DOF inside the element (local indices)
+        for node_local in range(6):
+            drill_dof = node_local * 6 + 5   # element-global indexing inside the 36x36 element matrix
+            Keglobal[drill_dof, drill_dof] += k_drill
+
         return Keglobal
 
     def get_mass_matrix(self):
         M = np.zeros((30,30))
         zetas = [1/6, 2/3, 1/6]
         etas = [1/6, 1/6, 2/3]
-        for i in range(len(zetas)):
-            detJ = np.linalg.det(self.get_jacobian(zetas[i], etas[i]))
-            shapes = self.shape_functions(zetas[i], etas[i])
-            Nt = np.zeros((3,18))
-            Nr = np.zeros((2,12))
-            for i in range(6):
-                Nt[0, 3 * i] = shapes[i]
-                Nt[1, 3 * i + 1] = shapes[i]
-                Nt[2, 3 * i + 2] = shapes[i]
-                Nr[0, 2 * i] = shapes[i]
-                Nr[1, 2 * i + 1] = shapes[i]
-            Mtt = self.rho * self.h * np.transpose(Nt) @ Nt
-            Mrr = self.rho * self.h**3 / 12 * np.transpose(Nr) @ Nr
-            for i in range(Mtt.shape[0]):
-                for j in range(Mtt.shape[1]):
-                    M[i,j] += detJ * Mtt[i,j]
-            for i in range(Mrr.shape[0]):
-                for j in range(Mrr.shape[1]):
-                    M[i + Mtt.shape[0], j + Mtt.shape[1]] += detJ * Mrr[i,j]
 
-        M *= 1/6
+        for gp in range(len(zetas)):
+            zeta = zetas[gp]
+            eta = etas[gp]
+            detJ = np.linalg.det(self.get_jacobian(zeta, eta))
+            shapes = self.shape_functions(zeta, eta)
+
+            # translational shape matrix (3 x 18)
+            Nt = np.zeros((3, 18))
+            # rotational shape matrix (2 x 12) for theta_x, theta_y local rotations
+            Nr = np.zeros((2, 12))
+
+            for a in range(6):
+                Nt[0, 3 * a]     = shapes[a]
+                Nt[1, 3 * a + 1] = shapes[a]
+                Nt[2, 3 * a + 2] = shapes[a]
+
+                Nr[0, 2 * a]     = shapes[a]        # theta_x shape
+                Nr[1, 2 * a + 1] = shapes[a]        # theta_y shape
+
+            Mtt = self.rho * self.h * (Nt.T @ Nt)
+            Mrr = self.rho * (self.h**3) / 12.0 * (Nr.T @ Nr)
+
+            # place translational block (18x18) in upper-left of M (30x30)
+            M[0:18, 0:18] += detJ * Mtt
+            # place rotational block (12x12) in lower-right of M
+            M[18:30, 18:30] += detJ * Mrr
+
+        M *= 1/6.0
         return M
 
     def get_Me_global(self):
@@ -333,7 +369,7 @@ class FEATriangle:
             detJ = np.linalg.det(self.get_jacobian(zetas[i], etas[i]))
             shapes = self.shape_functions(zetas[i], etas[i])
             for j in range(len(shapes)):
-                F[j] += n * (shapes[j] * pressure * detJ / 6)
+                F[j] += n * (shapes[j] * pressure * detJ * .5 / 6)
         return F
     
 
@@ -351,22 +387,40 @@ class FEATriangle:
     
 
     def get_geometric_stiffness(self, d):
-        myd = []
+    # Build the local 30-vector (6 nodes * 5 dofs) from global d (6 dofs/node)
         nodes = self.get_node_indexes()
-        for n in nodes:
-            for i in range(6):
-                myd.append(d[n * 6 + i])
+        myd_local = []   # length 30: [u_x,u_y,u_z,th_x,th_y] for each of 6 nodes
 
+        for node_idx in nodes:
+            # global displacement/rotation (global coords)
+            ug = np.array([d[node_idx*6 + 0], d[node_idx*6 + 1], d[node_idx*6 + 2]])
+            rg = np.array([d[node_idx*6 + 3], d[node_idx*6 + 4], d[node_idx*6 + 5]])
+
+            # Transform to element-local coordinates: local = Re.T @ global
+            # Note: self.Re maps local->global for coords, so Re.T maps global->local.
+            ReT = np.transpose(self.Re)
+            ulocal = ReT @ ug
+            rlocal = ReT @ rg
+
+            # local rotation vector: use only the two tangential components (theta_x_local, theta_y_local)
+            # (theta about local normal is not a local DOF)
+            myd_local.extend([ulocal[0], ulocal[1], ulocal[2], rlocal[0], rlocal[1]])
+
+        # Now use myd_local (length 30) to compute geometric stiffness (local)
         zetas = [1/6, 2/3, 1/6]
         etas = [1/6, 1/6, 2/3]
         Ksigma = np.zeros((30,30))
-        for i in range(len(zetas)):
-            Bm = self.get_membrane_B(zetas[i], etas[i])
-            detJ = np.linalg.det(self.get_jacobian(zetas[i], etas[i]))
-            strains = self.get_membrane_strain(zetas[i], etas[i], myd, Bm)
-            S = self.get_geometric_S(zetas[i], etas[i], strains)
-            ks = np.transpose(Bm) @ S @ Bm * detJ / 6
+
+        for gp in range(len(zetas)):
+            zeta = zetas[gp]
+            eta = etas[gp]
+            Bm = self.get_membrane_B(zeta, eta)   # 3 x 30
+            detJ = np.linalg.det(self.get_jacobian(zeta, eta))
+            strains = Bm @ np.array(myd_local)    # 3-vector
+            S = self.get_geometric_S(zeta, eta, strains)
+            ks = (Bm.T @ S @ Bm) * (detJ / 6.0)
             Ksigma += ks
+
         return Ksigma
     
     def get_Ks_global(self, d):

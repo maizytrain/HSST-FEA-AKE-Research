@@ -21,7 +21,7 @@ fig = go.Figure()
 sim = Simulation(36, 120, saddles = 3)
 sim.get_tris()
 sim.draw(fig, .3)
-sim.draw_prestress_deflected(fig, .7, .1)
+sim.draw_prestress_deflected(fig, .7, 1)
 sim.draw_fixities(fig)
 
 fig.update_layout(scene=dict(aspectmode='data'))
