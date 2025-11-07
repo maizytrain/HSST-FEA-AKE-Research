@@ -39,7 +39,7 @@ class Square:
 
 
 class Simulation:
-    def __init__(self, cylinderDiameter, cylinderLength, initialPressure = 100, resolution=3, saddles=2, saddle_inset=0, saddle_up=None):
+    def __init__(self, cylinderDiameter, cylinderLength, wall_thickness=.25, initialPressure = 100, resolution=3, saddles=2, saddle_inset=0, saddle_up=None):
         self.cylinderDiameter = cylinderDiameter
         self.cylinderLength = cylinderLength
         self.resolution = resolution
@@ -52,9 +52,10 @@ class Simulation:
         self.nodes = []
         self.triangles = []
         self.get_tris()
-        self.featriangles = self.triangles_to_featriangles()
+        self.featriangles = self.triangles_to_featriangles(h=wall_thickness)
         self.get_nodes()
         self.define_restraints()
+        self.h = wall_thickness
         # self.debug_fixities()
         self.original_volume = 4/3 * np.pi * (cylinderDiameter * .5)**3 + np.pi * (cylinderDiameter * .5)**2 * cylinderLength
         self.now_volume = self.original_volume
@@ -224,7 +225,7 @@ class Simulation:
                         node.fix_all()
 
 
-    def triangles_to_featriangles(self, E=29000, v=.3, h=.25, rho=.28, shear_correction = 5):
+    def triangles_to_featriangles(self, E=29000000, v=.3, h=.25, rho=.28, shear_correction = 5):
         tris = []
         for tri in self.triangles:
             tris.append(FEATriangle(Node(tri.p1), Node(tri.p2), Node(tri.p3), E, v, h, rho, shear_correction))

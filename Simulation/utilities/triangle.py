@@ -17,7 +17,7 @@ class Triangle:
 
 
 class FEATriangle:
-    def __init__(self, node1:Node, node2:Node, node3:Node, E=29000000, v=.3, h=.25, rho=.28, shear_correction = 5/6):
+    def __init__(self, node1:Node, node2:Node, node3:Node, E=29000000, v=.3, h=.25, rho=.28, shear_correction = 5/6, bending_correction = 1):
         self.n1 = node1.index
         self.n2 = node2.index
         self.n3 = node3.index
@@ -41,6 +41,7 @@ class FEATriangle:
         self.h = h
         self.rho = rho
         self.shear_correction = shear_correction
+        self.bending_correction = bending_correction
         self.set_basis_vectors()
         self.set_rotation_matrix()
         self.translate_points_to_local()
@@ -212,7 +213,7 @@ class FEATriangle:
         D[1,1] = 1
         D[2,2] = (1 - self.v) * .5
 
-        D = D * (self.E * self.h**3 / (12 * (1 - self.v**2))) #* 10
+        D = D * (self.E * self.h**3 / (12 * (1 - self.v**2))) * self.bending_correction
         return D
     
     def get_shear_D(self, zeta, eta):
@@ -247,6 +248,43 @@ class FEATriangle:
             Ks = np.transpose(B_s) @ D_s @ B_s
             Ke += (Km + Kb + Ks) * detJ / 6
             # Kb_drill = np.zeros((30,30))
+
+        rot_pairs = [
+            (0,1), (1,2), (2,0),  # corner-corner edges
+            (0,3), (3,1),         # corner- midside on edge 0-1
+            (1,4), (4,2),         # edge 1-2
+            (2,5), (5,0)          # edge 2-0
+        ]
+        # You can include (3,4),(4,5),(5,3) if you want midside-midside coupling too.
+
+        zeta = 1.0/3.0; eta = 1.0/3.0
+        Bm_center = self.get_membrane_B(zeta, eta)
+        Dm_center = self.get_membrane_D(zeta, eta)
+        Km_est = Bm_center.T @ Dm_center @ Bm_center
+        km_scale = abs(np.trace(Km_est) / max(1.0, Km_est.shape[0]))
+
+        beta = 1e-1
+        k_pair = beta * km_scale
+
+        Krot = np.zeros((30,30))
+        for (a,b) in rot_pairs:
+            ia_x = 5*a + 3
+            ib_x = 5*b + 3
+            ia_y = 5*a + 4
+            ib_y = 5*b + 4
+
+            Krot[ia_x, ia_x] += k_pair
+            Krot[ib_x, ib_x] += k_pair
+            Krot[ia_x, ib_x] -= k_pair
+            Krot[ib_x, ia_x] -= k_pair
+
+            Krot[ia_y, ia_y] += k_pair
+            Krot[ib_y, ib_y] += k_pair
+            Krot[ia_y, ib_y] -= k_pair
+            Krot[ib_y, ia_y] -= k_pair
+        
+        Ke += Krot
+
         return Ke
 
     def get_Te(self):
@@ -267,35 +305,23 @@ class FEATriangle:
         return Te
 
     def get_Ke_global(self):
-        # Local-to-global transform
-        Te = self.get_Te()            # 30 x 36
-        Ke = self.get_Ke()           # 30 x 30 (local element stiffness in element-local coords)
+        Te = self.get_Te()
+        Ke = self.get_Ke()
 
-        # Element stiffness in element-global coords (36 x 36)
         Keglobal = Te.T @ Ke @ Te
 
-        # ------------------ drilling stabilization (element-local) ------------------
-        # We must add a small diagonal penalty to each node's drilling DOF inside this element
-        # (element-local DOF index = node_local*6 + 5, for node_local = 0..5).
-        #
-        # Choose a penalty scaled to the element membrane stiffness so units/scale are consistent.
-        # alpha is a small fraction; 1e-3 is a reasonable starting point (reduce if needed).
         alpha = 1e-3
 
-        # Estimate a representative membrane stiffness magnitude at the element center
-        # (use zeta=eta=1/3 integration point for a simple estimate)
         zeta = 1.0/3.0
         eta = 1.0/3.0
-        Bm_center = self.get_membrane_B(zeta, eta)       # 3 x 30
-        Dm_center = self.get_membrane_D(zeta, eta)       # 3 x 3
-        Km_est = Bm_center.T @ Dm_center @ Bm_center     # 30 x 30 (but dominated by membrane part)
-        # derive a scalar scale (use trace averaged by size to avoid huge values)
+        Bm_center = self.get_membrane_B(zeta, eta)
+        Dm_center = self.get_membrane_D(zeta, eta)
+        Km_est = Bm_center.T @ Dm_center @ Bm_center
         km_scale = np.trace(Km_est) / max(1.0, Km_est.shape[0])
         k_drill = alpha * abs(km_scale)
 
-        # Apply drilling penalty to each node's drilling DOF inside the element (local indices)
         for node_local in range(6):
-            drill_dof = node_local * 6 + 5   # element-global indexing inside the 36x36 element matrix
+            drill_dof = node_local * 6 + 5
             Keglobal[drill_dof, drill_dof] += k_drill
 
         return Keglobal
